@@ -1,3 +1,8 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Alternatively, you can add the following styles to your stylesheet */
+.bg-gradient-to-b {
+  background-image: linear-gradient(to bottom, #7a4bb7, #483718);
+}
