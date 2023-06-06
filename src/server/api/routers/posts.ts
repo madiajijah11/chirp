@@ -45,7 +45,7 @@ export const postsRouter = createTRPCRouter({
 
     const users = (
       await clerkClient.users.getUserList({
-        userId: posts.map((post) => post.authorId),
+        userId: posts.map((post) => post.authorId).filter((id): id is string => id !== null),
         limit: 100,
       })
     ).map(filterUserForClient);
