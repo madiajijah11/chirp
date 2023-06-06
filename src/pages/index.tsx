@@ -1,16 +1,15 @@
-import Head from "next/head";
 import { SignIn, SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import { api } from "~/utils/api";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 
 import { type NextPage } from "next";
-import type { RouterOutputs } from "~/utils/api";
 import Image from "next/image";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import Loading from "~/components/Loading";
-import Link from "next/link";
+import { Layout } from "~/components/Layouts";
+import { PostView } from "~/components/PostView";
 
 dayjs.extend(relativeTime);
 
@@ -78,40 +77,6 @@ const CreatePostWizard = () => {
   );
 };
 
-type PostWithUser = RouterOutputs["posts"]["getAll"][number];
-
-const PostView = (props: PostWithUser) => {
-  const { post, author } = props;
-  return (
-    <div className="flex items-start gap-2">
-      <Image
-        className="h-10 w-10 rounded-full"
-        src={author.profileImageUrl}
-        alt="Profile"
-        width={40}
-        height={40}
-      />
-      <div className="flex w-full flex-col">
-        <div className="flex items-center">
-          <Link href={`/@${author.username}`}>
-            <span className="font-bold">{`@${author.username}`}</span>
-          </Link>
-          <span className="ml-2 text-gray-500">
-            {dayjs(post.createdAt).fromNow()}
-          </span>
-        </div>
-        <Link href={`/post/${post.id}`}>
-          <p className="text-sm">{post.content}</p>
-        </Link>
-        <div className="mt-2 flex gap-2">
-          <button className="text-blue-500 hover:text-blue-700">Like</button>
-          <button className="text-gray-500 hover:text-gray-700">Retweet</button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const Home: NextPage = () => {
   const user = useUser();
 
@@ -123,40 +88,38 @@ const Home: NextPage = () => {
 
   return (
     <>
-      <main className="flex h-screen flex-col items-center bg-gradient-to-b from-blue-400 to-blue-600">
-        <div className="w-full max-w-md">
-          <div className="hidden rounded-lg bg-white p-4 shadow-lg">
-            <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" />
-          </div>
-          <div className="mt-4">
-            {!user.isSignedIn && (
-              <div className="rounded-lg bg-white p-4 shadow-lg">
-                <SignInButton />
-              </div>
-            )}
-            {user.isSignedIn && (
-              <div className="flex flex-col">
-                <div className="mb-4 w-full rounded-lg bg-white p-4 shadow-lg">
-                  <SignOutButton />
-                </div>
-                <div className="w-full rounded-lg bg-white p-4 shadow-lg">
-                  <CreatePostWizard />
-                </div>
-              </div>
-            )}
-          </div>
-          <div className="mt-4">
-            {data?.map((fullPost) => (
-              <div
-                className="mb-4 rounded-lg bg-white p-4 shadow-lg"
-                key={fullPost.post.id}
-              >
-                <PostView {...fullPost} />
-              </div>
-            ))}
-          </div>
+      <Layout>
+        <div className="hidden rounded-lg bg-white p-4 shadow-lg">
+          <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" />
         </div>
-      </main>
+        <div className="mt-4">
+          {!user.isSignedIn && (
+            <div className="rounded-lg bg-white p-4 shadow-lg">
+              <SignInButton />
+            </div>
+          )}
+          {user.isSignedIn && (
+            <div className="flex flex-col">
+              <div className="mb-4 w-full rounded-lg bg-white p-4 shadow-lg">
+                <SignOutButton />
+              </div>
+              <div className="w-full rounded-lg bg-white p-4 shadow-lg">
+                <CreatePostWizard />
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="mt-4">
+          {data?.map((fullPost) => (
+            <div
+              className="mb-4 rounded-lg bg-white p-4 shadow-lg"
+              key={fullPost.post.id}
+            >
+              <PostView {...fullPost} />
+            </div>
+          ))}
+        </div>
+      </Layout>
     </>
   );
 };
