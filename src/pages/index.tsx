@@ -7,13 +7,24 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { type NextPage } from "next";
 import type { RouterOutputs } from "~/utils/api";
 import Image from "next/image";
+import { useState } from "react";
 
 dayjs.extend(relativeTime);
 
 const CreatePostWizard = () => {
   const { user } = useUser();
-  console.log(user);
+  const ctx = api.useContext();
+  const { mutate, isLoading: isPosting } = api.posts.create.useMutation({
+    onSuccess: () => {
+      setInput("");
+      void ctx.posts.getAll.invalidate();
+    },
+  });
+
+  const [input, setInput] = useState("");
+
   if (!user) return null;
+
   return (
     <div className="flex items-center justify-center gap-2">
       <Image
@@ -23,7 +34,19 @@ const CreatePostWizard = () => {
         width={40}
         height={40}
       />
-      <input className="h-10 rounded-lg border-2 border-gray-300 bg-white px-5 pr-16 text-sm focus:outline-none" />
+      <input
+        className="h-10 rounded-lg border-2 border-gray-300 bg-white px-5 pr-16 text-sm focus:outline-none"
+        type="text"
+        value={input}
+        onChange={(e) => setInput(e.target.value)}
+        disabled={isPosting}
+      />
+      <button
+        className="rounded bg-blue-500 py-2 px-4 font-bold text-white hover:bg-blue-700"
+        onClick={() => mutate({ content: input })}
+      >
+        Post
+      </button>
     </div>
   );
 };
@@ -33,8 +56,8 @@ type PostWithUser = RouterOutputs["posts"]["getAll"][number];
 const PostView = (props: PostWithUser) => {
   const { post, author } = props;
   return (
-    <div className="card">
-      <div className="card-body">
+    <div className="card mb-4">
+      <div className="card-body p-4">
         <div className="flex items-center">
           <Image
             className="mr-2 h-10 w-10 rounded-full"
@@ -73,20 +96,22 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main className="flex h-screen flex-col items-center bg-gradient-to-b">
-        <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" />
-        <div>
-          {!user.isSignedIn && <SignInButton />}
-          {user.isSignedIn && (
-            <div>
-              <CreatePostWizard />
-              <SignOutButton />
-            </div>
-          )}
-        </div>
-        <div>
-          {data?.map((fullPost) => (
-            <PostView key={fullPost.post.id} {...fullPost} />
-          ))}
+        <div className="w-full max-w-md">
+          <SignIn path="/sign-in" routing="path" signUpUrl="/sign-up" />
+          <div className="mt-4">
+            {!user.isSignedIn && <SignInButton />}
+            {user.isSignedIn && (
+              <div className="flex justify-between">
+                <CreatePostWizard />
+                <SignOutButton />
+              </div>
+            )}
+          </div>
+          <div className="mt-4">
+            {data?.map((fullPost) => (
+              <PostView key={fullPost.post.id} {...fullPost} />
+            ))}
+          </div>
         </div>
       </main>
     </>
