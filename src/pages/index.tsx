@@ -8,6 +8,7 @@ import { type NextPage } from "next";
 import type { RouterOutputs } from "~/utils/api";
 import Image from "next/image";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 dayjs.extend(relativeTime);
 
@@ -18,6 +19,15 @@ const CreatePostWizard = () => {
     onSuccess: () => {
       setInput("");
       void ctx.posts.getAll.invalidate();
+    },
+    onError: (error) => {
+      // console.log(error.data?.zodError?.fieldErrors?.content);
+      const errorMessage = error.data?.zodError?.fieldErrors?.content;
+      if (errorMessage && errorMessage[0]) {
+        toast.error(errorMessage[0]);
+      } else {
+        toast.error("Failed to post!, please try again later.");
+      }
     },
   });
 
@@ -41,12 +51,23 @@ const CreatePostWizard = () => {
         onChange={(e) => setInput(e.target.value)}
         disabled={isPosting}
       />
-      <button
-        className="rounded bg-blue-500 py-2 px-4 font-bold text-white hover:bg-blue-700"
-        onClick={() => mutate({ content: input })}
-      >
-        Post
-      </button>
+      {input !== "" && !isPosting && (
+        <button
+          className="rounded bg-blue-500 py-2 px-4 font-bold text-white hover:bg-blue-700"
+          onClick={() => mutate({ content: input })}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (input !== "") {
+                mutate({ content: input });
+              }
+            }
+          }}
+        >
+          Post
+        </button>
+      )}
+      {isPosting && <div>Posting...</div>}
     </div>
   );
 };
